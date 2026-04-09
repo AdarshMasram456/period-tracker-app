@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Period Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(to bottom, #ff99cc, #ffe6f0);
+    padding: 20px;
+}
+.container {
+    max-width: 400px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: center;
+}
+h2 {
+    color: #d63384;
+}
+input {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    width: 90%;
+}
+
+button {
+    padding: 12px;
+    background: #d63384;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    width: 95%;
+    margin-top: 10px;
+}
+
+li {
+    background: #ffe6f0;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>🌸 Period Tracker</h2>
+<input type="date" id="date">
+<button onclick="saveData()">Save</button>
+<h3>Your Records</h3>
+<ul id="list"></ul>
+</div>
+<script>
+function getData() {
+    return JSON.parse(localStorage.getItem("periodData")) || [];
+}
+function saveToLocal(data) {
+    localStorage.setItem("periodData", JSON.stringify(data));
+}
+function predictNext(date) {
+    let data = getData();
+    // If less than 2 records → default 28 days
+    if (data.length < 2) {
+        let d = new Date(date);
+        d.setDate(d.getDate() + 28);
+        return d.toISOString().split("T")[0];
+    }
+    // Get last 2 dates
+    let last = new Date(data[data.length - 1].date);
+    let prev = new Date(data[data.length - 2].date);
+    // Calculate gap in days
+    let diff = (last - prev) / (1000 * 60 * 60 * 24);
+    // Predict next date
+    let next = new Date(last);
+    next.setDate(last.getDate() + diff);
+    return next.toISOString().split("T")[0];
+}
+function saveData() {
+    let date = document.getElementById("date").value;
+    let data = getData();
+    data.push({ date });
+    saveToLocal(data);
+    loadData();
+}
+function loadData() {
+    let data = getData();
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+    data.forEach(item => {
+        let li = document.createElement("li");
+        let next = predictNext(item.date);
+
+        li.innerText = `Start: ${item.date} | Next: ${next}`;
+        list.appendChild(li);
+    });
+}
+loadData();
+</script>
+</body>
+</html>
